@@ -40,15 +40,16 @@ namespace tjs_radMod
         }
 
 
-
-        public static double getRadiationLevel(string activeBody, double activeAltitude, double activeLatitude, double atmoDen) //Lethal with no protection: 1.5 (WIP)
+        // Beware, this function is the hearth of the mod, but is very messy :P
+        public static double getRadiationLevel(CelestialBody activeBody, double activeAltitude, double activeLatitude, double atmoActualDeep) //Lethal with no protection: 1.5 (WIP)
         {
-            activeLatitude = Math.Abs(activeLatitude);
+            activeLatitude = Math.Abs(activeLatitude);  
+            bool hasAtmosphere = false;
+          
+            double groundDose = 1;
             
-            if(atmoDen == 0)  
-            {
-                atmoDen = 0.00001; //Very low number 
-            }
+            double activeAtmoAltitude = 1; //How deep are you in the atmosphere? 0 when there is no atmosphere over you.
+            
             if (activeAltitude == 0) //Just in case you are at exactly 0 meters...
             {
                 activeAltitude = 1; //Set to a reasonably low number.
@@ -57,11 +58,114 @@ namespace tjs_radMod
             {
                 activeLatitude = 1.5; //Set to 1.5 so the result is not 0, but -0.5
             }
-            if(activeAltitude == activeLatitude)  //Another safety check!
+            if(activeAltitude == activeLatitude)  //Another safety check! (Due to code limitations :P)
             {
                 activeLatitude = activeLatitude + 1;
             }
-             
+
+            //Creating variable table for active planet (Compatibility with planet packs)
+            if (activeBody.atmosphere == true) 
+            { 
+                hasAtmosphere = true; 
+            }
+            double seaLevelAtm = activeBody.atmosphereMultiplier; //The pressure at sea level (ATM)      
+            double atmScaleHeight = activeBody.atmosphereScaleHeight; //On kms, this is a very confusing thingy...
+            double orbAltitude = activeBody.orbit.altitude; //The current orbit altitude.
+            double radiationAvrDose = 100000000000 / orbAltitude; //That first number can be changed, may it be changed as a difficulty slider?
+
+            if (activeBody.orbit.referenceBody.name == "Sun")  //Make sure this is a planet, and not a moon!
+            {
+                //Calculation starts here:
+                if (activeBody.name == "Sun")  //This one is required, as there is no way to do it otherway (The sun is not orbiting anything)
+                {
+                    groundDose = 100000000000;  //100,000,000,000 = 1 d/s (7.3 d/s on kerbin's altitude)
+                    double radiationLevel = groundDose / activeAltitude;  //Simplified, needs work!!
+                    if (radiationLevel == 0.00) { radiationLevel = 0.01; } //Safety First!!
+                    return radiationLevel;
+                }
+                else
+                {
+                    if (hasAtmosphere == true)
+                    {
+
+                        if (atmoActualDeep <= 0)
+                        {
+                            activeAtmoAltitude = 0; //Uh, cause KSP may start doing unwanted stuff!
+                        }
+                        else
+                        {
+                            activeAtmoAltitude = atmoActualDeep / seaLevelAtm; //Easy, calculating how deep are you in the atmosphere
+                            //(Decimal Percentage) (1 if you are at sea level)
+
+
+                        }
+                        groundDose = radiationAvrDose - activeAtmoAltitude; //Shall do its job (Untested)
+
+                    }
+                    else
+                    {
+                        groundDose = radiationAvrDose; //Expendable, for adding radiation emiting planets!
+                    }
+
+
+                    double radiationLevel = groundDose / Math.Abs(activeAltitude - activeLatitude); //Simple! May need to multiply this for more impact!
+                    //Once again more atmospheric dependant calculation :P
+                    if (hasAtmosphere == true)
+                    {
+                        radiationLevel = radiationLevel + (radiationAvrDose - (activeAtmoAltitude * radiationAvrDose));
+                    }
+                    else
+                    {
+                        radiationLevel = radiationLevel + radiationAvrDose;  //Simpler way to calculate this
+                    }
+
+                    return radiationLevel;  //And finally, get that radiation :D
+                }
+            }
+            else //If it's a moon, do these calculations!
+            {
+                double hostPlanetRadiation = 100000000000 / activeBody.orbit.referenceBody.orbit.altitude; //Duh, that call 
+                double myRadiation = hostPlanetRadiation; //Needs expansion!
+                if (hasAtmosphere == true)
+                {
+
+                    if (atmoActualDeep <= 0)
+                    {
+                        activeAtmoAltitude = 0; //Uh, cause KSP may start doing unwanted stuff!
+                    }
+                    else
+                    {
+                        activeAtmoAltitude = atmoActualDeep / seaLevelAtm; //Easy, calculating how deep are you in the atmosphere
+                        //(Decimal Percentage) (1 if you are at sea level)
+
+
+                    }
+                    groundDose = myRadiation - activeAtmoAltitude; //Shall do its job (Untested)
+
+                }
+                else
+                {
+                    groundDose = myRadiation; //Expandable, for adding radiation emiting planets!
+                }
+
+
+                double radiationLevel = groundDose / Math.Abs(activeAltitude - activeLatitude); //Simple! May need to multiply this for more impact!
+                //Once again more atmospheric dependant calculation :P
+                if (hasAtmosphere == true)
+                {
+                    radiationLevel = radiationLevel + (radiationAvrDose - (activeAtmoAltitude * radiationAvrDose));
+                }
+                else
+                {
+                    radiationLevel = radiationLevel + radiationAvrDose;  //Simpler way to calculate this
+                }
+
+                return radiationLevel;  //And finally, get that radiation :D
+
+            }
+
+
+            /* Sadly, all this code becomes slighty useless with the CelestialBody class D:
             if (activeBody == "Sun")  //Aparently, Kerbol is named Sun in code! (That's why we were getting bugged returns)
             {
                 double groundDose = 100000000000;  //100,000,000,000 = 1 d/s (7.3 d/s on kerbin's altitude)
@@ -70,6 +174,7 @@ namespace tjs_radMod
                 return radiationLevel;
                
             }
+
             if (activeBody == "Moho")
             {
                 //Here stuff gets tricky...
@@ -126,7 +231,7 @@ namespace tjs_radMod
             }else{
                 return 2.00; //WIP Return
             }
-            
+            */
             
 
         }
@@ -134,6 +239,8 @@ namespace tjs_radMod
 
         
     }
+    
     }
 
     
+
