@@ -9,6 +9,7 @@ namespace tjs_radMod
     [KSPAddon(KSPAddon.Startup.Flight, false)]
     public class radManager //Global checking of radiation
     {
+        //Some changes are not tested!
         
         //Make sure this on is the same as the one in "tjs_podRadiation"!!!
         private int safetyWait = 25; //Ammount of ticks to wait before the radiation stuff starts to happen (Safety first)
