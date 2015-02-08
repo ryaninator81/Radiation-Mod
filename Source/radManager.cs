@@ -96,6 +96,7 @@ namespace tjs_radMod
                 radiationLevel = radiationLevel + (alwaysDose - atmoDeep / 10000); //At ground level, the radiation level is about 0,35.
                 return radiationLevel;
             }
+            //From here everything is WIP!
             if (activeBody == "Dres")
             {
                 double alwaysDose = 19.79;  //AVERAGE radiation dose on moho's orbit altitude. 
