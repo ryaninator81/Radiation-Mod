@@ -13,21 +13,20 @@ namespace tjs_radMod
     {
         //Variables
         [KSPField(isPersistant = true)]
-        public double radAmmount = 0f;  //Internal, manages how much radiation is applied to a certin pod (Before maths)
+        public double radAmmount = 0;  //Internal, manages how much radiation is applied to a certin pod (Before maths)
         [KSPField(isPersistant = false)]
-        public double radShield = 1f;  //Configurable, is a DIVISOR of radAmmount, basically, shield ammount.
+        public double radShield = 1;  //Configurable, is a DIVISOR of radAmmount, basically, shield ammount.
         [KSPField(isPersistant = true)]
-        public double radShieldExtra = 0f; //Internal, adds to radShield. Is dependant of protective fluid on the part
-
+        public double radShieldExtra = 0; //Internal, adds to radShield. Is dependant of protective fluid on the part
         private int safetyWait = 25; //Ammount of ticks to wait before the radiation stuff starts to happen (Safety first)
         private int safetyWaited = 0; //Ammount of ticks that have been already waited :P
 
         private string activePlanet = "NO_DATA"; //Active SOI. Set to "NO_DATA" to not damage crew on load.
         private double altitude = 0; //Used in radiation calculation.
         private double latitude = 0; //There tends to be more radiation at the poles.
-
+        private double atmoDensity = 0;
         //onStart:
-        public override void onStart(StartState state)  //Runs when the part spawns
+        public override void OnStart(StartState state)  //Runs when the part spawns
         {
             
             if(HighLogic.LoadedSceneIsFlight == true)  //Check whenever the part is on flight
@@ -44,25 +43,29 @@ namespace tjs_radMod
 
         public override void OnUpdate()
         {
-            if(safetyWait == safetyWaited)
+            if (HighLogic.LoadedSceneIsFlight == true)
             {
-                //All code goes here!
+                if (safetyWait == safetyWaited)
+                {
+                    //All code goes here!
 
-                //HOPE IT WILL WORK!!!
-                activePlanet = vessel.orbit.referenceBody.bodyName;
-                altitude = vessel.altitude;
-                latitude = vessel.latitude;
 
-                Debug.Log("[Useless Spam] Vessel's active planet is: " + activePlanet + ", active altitude is: " + altitude + " and latitude is: " + latitude);
+                    activePlanet = vessel.orbit.referenceBody.bodyName;
+                    altitude = vessel.altitude;
+                    latitude = vessel.latitude;
+                    atmoDensity = vessel.atmDensity;
+                    radAmmount = radManager.getRadiationLevel(activePlanet, altitude, latitude, atmoDensity);
+                    Debug.Log("[Spam] Vessel atmospheric density: " + atmoDensity);
+                    Debug.Log("[More Useless Spam] Vessel radiation level is: " + radAmmount.ToString());
+                    
 
-              
+                }
+                else  //Safety first!
+                {
 
-            }
-            else  //Safety first!
-            {
+                    safetyWaited = safetyWaited + 1;
 
-                safetyWaited = safetyWaited + 1;
-
+                }
             }
 
         }
