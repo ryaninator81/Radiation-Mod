@@ -7,7 +7,7 @@ using UnityEngine;
 namespace tjs_radMod
 {
     [KSPAddon(KSPAddon.Startup.Flight, false)]
-    public class radManager //Global checking of radiation
+    public class radManager : MonoBehaviour //Global checking of radiation
     {
         //Some changes are not tested!
         
