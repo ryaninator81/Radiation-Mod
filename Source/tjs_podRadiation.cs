@@ -20,7 +20,7 @@ namespace tjs_radMod
         public double radShieldExtra = 0; //Internal, adds to radShield. Is dependant of protective fluid on the part
         private int safetyWait = 25; //Ammount of ticks to wait before the radiation stuff starts to happen (Safety first)
         private int safetyWaited = 0; //Ammount of ticks that have been already waited :P
-
+        public CelestialBody activeComplexPlanet; //Complex way to get the planet data (Uh this exists! Time to redo everything!)
         private string activePlanet = "NO_DATA"; //Active SOI. Set to "NO_DATA" to not damage crew on load.
         private double altitude = 0; //Used in radiation calculation.
         private double latitude = 0; //There tends to be more radiation at the poles.
@@ -51,10 +51,11 @@ namespace tjs_radMod
 
 
                     activePlanet = vessel.orbit.referenceBody.bodyName;
+                    
                     altitude = vessel.altitude;
                     latitude = vessel.latitude;
                     atmoDensity = vessel.atmDensity;
-                    radAmmount = radManager.getRadiationLevel(activePlanet, altitude, latitude, atmoDensity);
+                    radAmmount = radManager.getRadiationLevel(activeComplexPlanet, altitude, latitude, atmoDensity);
                     Debug.Log("[Spam] Vessel atmospheric density: " + atmoDensity);
                     Debug.Log("[More Useless Spam] Vessel radiation level is: " + radAmmount.ToString());
                     
@@ -73,13 +74,23 @@ namespace tjs_radMod
         //Simple function, it does some magic and converts three input values into the final radiation dose!
         //The magic behind this: radiationAmmount / (radiationShield + radiationShieldExtra)
 
-        public float cRadiation(float radiationAmmount, float radiationShield, float radiationShieldExtra)
+        public double cRadiation(double radiationAmmount, double radiationShield, double radiationShieldExtra)
         {
-            float finRadiation = radiationAmmount / (radiationShield + radiationShieldExtra);
-            return finRadiation;  
+            double finRadiation = radiationAmmount / (radiationShield + radiationShieldExtra);
+            return finRadiation;
+            
+            
         }
 
+        public double cAtmoPercent(CelestialBody planetName, double atmoDeep)  //Uuuh, just discovered CelestialBody thing :P
+        {
+            
+            
+                if (atmoDeep > planetName.atmosphereMultiplier) { return 1; } // If it's higher, simply return the full percent.
+                double finalPercent = (atmoDeep / planetName.atmosphereMultiplier); //Not really a percent, but a decimal.
+                return finalPercent;
 
+        }
 
 
     }
